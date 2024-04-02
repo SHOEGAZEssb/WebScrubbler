@@ -1,0 +1,128 @@
+﻿@page "/manualscrobble"
+@using IF.Lastfm.Core.Api
+@using IF.Lastfm.Core.Objects
+@using IF.Lastfm.Core.Scrobblers
+
+@inject LastfmClientService FMClient
+
+<PageTitle>Manual Scrobble</PageTitle>
+
+<h3>Manual Scrobble</h3>
+
+<Grid>
+  <ColumnDefinitions>
+    <ColumnDefinition Width="*" />
+    <ColumnDefinition Width="10" />
+    <ColumnDefinition Width="*" />
+  </ColumnDefinitions>
+  <RowDefinitions>
+    <RowDefinition Height="Auto" />
+    <RowDefinition Height="20" />
+    <RowDefinition Height="Auto" />
+    <RowDefinition Height="20" />
+    <RowDefinition Height="Auto" />
+    <RowDefinition Height="20" />
+    <RowDefinition Height="Auto" />
+    <RowDefinition Height="50" />
+    <RowDefinition Height="Auto" />
+  </RowDefinitions>
+
+  <Content>
+    <GridElement Column="1" Row="1">
+      Artist
+      <InputText @bind-Value="@Artist" @oninput="@(e => Artist = e?.Value?.ToString())" placeholder="Artist" class="form-control" />
+    </GridElement>
+
+    <GridElement Column="3" Row="1">
+      Track
+      <InputText @bind-Value="@Track" @oninput="@(e => Track = e?.Value?.ToString())" placeholder="Track" class="form-control" />
+    </GridElement>
+
+    <GridElement Column="1" Row="3">
+      Album
+      <InputText @bind-Value="@Album" placeholder="Album" class="form-control" />
+    </GridElement>
+
+    <GridElement Column="3" Row="3">
+      Album Artist
+      <InputText @bind-Value="@AlbumArtist" placeholder="Album Artist" class="form-control" />
+    </GridElement>
+
+    <GridElement Column="1" Row="5">
+      Timestamp
+      <InputDate @bind-Value="@Timestamp" class="form-control" Type="InputDateType.DateTimeLocal" />
+    </GridElement>
+
+    <GridElement Column="1" Row="7" ColumnSpan="3">
+      <div class="@(LastResponse?.Success ?? false ? "alert alert-success" : "alert alert-danger")" style="display: @(LastResponse == null ? "none" : "block")">
+        @if (LastResponse?.Success ?? false)
+        {
+          <span>Successfully scrobbled "@(Track)" by "@(Artist)"</span>
+        }
+        else
+        {
+          <span>Error scrobbling track: @(LastResponse?.Status.ToString() ?? "unknown error")</span>
+        }
+      </div>
+    </GridElement>
+
+    <GridElement Column="1" Row="9" HorizontalAlignment="@Alignment.Start">
+      <button class="btn btn-primary" @onclick="Scrobble" disabled="@(string.IsNullOrEmpty(Artist) || string.IsNullOrEmpty(Track) || Scrobbling)">
+        @if (Scrobbling)
+        {
+          <div class="spinner-border" role="status"/>
+        }
+        else
+        {
+          <span>Scrobble</span>
+        }
+      </button>
+    </GridElement>
+  </Content>
+</Grid>
+
+@code {
+  #region Properties
+
+  private string? Artist;
+
+  private string? Track;
+
+  private string? Album;
+
+  private string? AlbumArtist;
+
+  private DateTime Timestamp = DateTime.Now;
+
+  private ScrobbleResponse? LastResponse;
+
+  private bool Scrobbling = false;
+
+  #endregion Properties
+
+  public async Task Scrobble()
+  {
+    try
+    {
+      Scrobbling = true;
+
+      var client = await FMClient.GetClient();
+      if (client != null)
+      {
+        LastResponse = null;
+        var scrobbler = client.Scrobbler;
+        var scrobble = new Scrobble(Artist, Album, Track, Timestamp)
+          {
+            AlbumArtist = AlbumArtist
+          };
+
+        await Task.Delay(3000);
+        LastResponse = await scrobbler.ScrobbleAsync(scrobble);
+      }
+    }
+    finally
+    {
+      Scrobbling = false;
+    }
+  }
+}

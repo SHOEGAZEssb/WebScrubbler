@@ -1,0 +1,84 @@
+﻿@page "/lastfmlogin"
+@layout EmptyLayout
+
+@using IF.Lastfm.Core.Api
+@using Microsoft.AspNetCore.WebUtilities
+@using System.Net
+@using Newtonsoft.Json
+@using System.Text
+@inject HttpClient HttpClient
+@inject NavigationManager NavManager
+
+<h3>Logging you in...</h3>
+
+@code {
+  protected override async Task OnInitializedAsync()
+  {
+    var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+    if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("token", out var token))
+    {
+      var t = token.ToString();
+
+      // fetch session
+      var paramDict = new Dictionary<string, string>()
+      {
+        { "api_key", "69fbfa5fdc2cc1a158ec3bffab4be7a7" },
+        { "method", "auth.getSession" },
+        { "token", t }
+      };
+
+      var signedUrl = GetSignedURI(paramDict, true);
+      using (var response = await HttpClient.GetAsync(signedUrl))
+      {
+        if (response.StatusCode != HttpStatusCode.OK)
+          throw new Exception($"Could not fetch session key: {response.StatusCode}");
+
+        var content = await response.Content.ReadAsStringAsync();
+        var sessionDict = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(await response.Content.ReadAsStringAsync());
+        if (sessionDict?.TryGetValue("session", out Dictionary<string, string> sessionInfoDict) ?? false)
+        {
+          if (sessionInfoDict.TryGetValue("name", out string username) && sessionInfoDict.TryGetValue("key", out string key))
+          {
+            var subscriber = sessionInfoDict.ContainsKey("subscriber") && sessionInfoDict["subscriber"] == "1";
+            var la = new LastAuth("69fbfa5fdc2cc1a158ec3bffab4be7a7", "30a6ed8a75dad2aa6758fa607c53adb5");
+            la.LoadSession(new IF.Lastfm.Core.Objects.LastUserSession() { Token = key, Username = username, IsSubscriber = subscriber });
+            await la.SaveToLocalStorage();
+            NavManager.NavigateTo($"{NavManager.BaseUri}lastfm");
+          }
+          else
+            throw new Exception("Session info does not contain name or session key");
+        }
+        else
+          throw new Exception("Session response does not contain a session");
+      }
+    }
+  }
+
+  private static string GetSignedURI(Dictionary<string, string> args, bool get)
+  {
+    var stringBuilder = new StringBuilder();
+    if (get)
+      stringBuilder.Append("https://ws.audioscrobbler.com/2.0/?");
+    foreach (var kvp in args)
+      stringBuilder.AppendFormat("{0}={1}&", kvp.Key, kvp.Value);
+    stringBuilder.Append("api_sig=" + SignCall(args));
+    stringBuilder.Append("&format=json");
+    return stringBuilder.ToString();
+  }
+
+  private static string CreateMD5(string toHash)
+  {
+    byte[] textBytes = Encoding.UTF8.GetBytes(toHash);
+    byte[] hash = MD5.ComputeHash(textBytes);
+    return hash.Aggregate("", (current, a) => current + a.ToString("x2"));
+  }
+
+  private static string SignCall(Dictionary<string, string> args)
+  {
+    IOrderedEnumerable<KeyValuePair<string, string>> sortedArgs = args.OrderBy(arg => arg.Key);
+    string signature =
+        sortedArgs.Select(pair => pair.Key + pair.Value).
+        Aggregate((first, second) => first + second);
+    return CreateMD5(signature + "30a6ed8a75dad2aa6758fa607c53adb5");
+  }
+}

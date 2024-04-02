@@ -1,0 +1,19 @@
+﻿@page "/landing"
+@layout EmptyLayout
+
+@inject NavigationManager NavManager
+
+<div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+  <div class="text-center">
+    <p role="status">Welcome to the WebScrubbler. Please log in via your last.fm account to continue.</p>
+    <button class="btn btn-primary" @onclick="Login">Login</button>
+  </div>
+</div>
+
+@code {
+
+  private void Login()
+  {
+    NavManager.NavigateTo($"http://www.last.fm/api/auth/?api_key=69fbfa5fdc2cc1a158ec3bffab4be7a7&cb={NavManager.BaseUri}lastfmlogin");
+  }
+}
