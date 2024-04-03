@@ -43,7 +43,7 @@
             var la = new LastAuth("69fbfa5fdc2cc1a158ec3bffab4be7a7", "30a6ed8a75dad2aa6758fa607c53adb5");
             la.LoadSession(new IF.Lastfm.Core.Objects.LastUserSession() { Token = key, Username = username, IsSubscriber = subscriber });
             await la.SaveToLocalStorage();
-            NavManager.NavigateTo($"{NavManager.BaseUri}lastfm");
+            NavManager.NavigateTo($"{NavManager.BaseUri}");
           }
           else
             throw new Exception("Session info does not contain name or session key");
