@@ -57,7 +57,7 @@
       <div class="@(LastResponse?.Success ?? false ? "alert alert-success" : "alert alert-danger")" style="display: @(LastResponse == null ? "none" : "block")">
         @if (LastResponse?.Success ?? false)
         {
-          <span>Successfully scrobbled "@(Track)" by "@(Artist)"</span>
+          <span>Successfully scrobbled "@(LastSuccessfulTrack)" by "@(LastSuccessfulArtist)"</span>
         }
         else
         {
@@ -98,6 +98,9 @@
 
   private bool Scrobbling = false;
 
+  private string? LastSuccessfulArtist;
+  private string? LastSuccessfulTrack;
+
   #endregion Properties
 
   public async Task Scrobble()
@@ -118,6 +121,11 @@
 
         await Task.Delay(3000);
         LastResponse = await scrobbler.ScrobbleAsync(scrobble);
+        if (LastResponse.Success)
+        {
+          LastSuccessfulArtist = Artist;
+          LastSuccessfulTrack = Track;
+        }
       }
     }
     finally
