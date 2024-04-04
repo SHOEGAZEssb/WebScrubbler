@@ -1,0 +1,66 @@
+﻿@page "/fileparsescrobble"
+@using WebScrubbler.Components
+@layout MainLayout
+
+@inject LastfmClientService FMClient
+
+<PageTitle>File Parse Scrobble</PageTitle>
+
+<h3>File Parse Scrobble</h3>
+
+<Grid>
+  <RowDefinitions>
+    <RowDefinition Height="Auto" />
+    <RowDefinition Height="30" />
+    <RowDefinition Height="*" />
+  </RowDefinitions>
+  <ColumnDefinitions>
+    <ColumnDefinition Width="Auto" />
+    <ColumnDefinition Width="5" />
+    <ColumnDefinition Width="*" />
+  </ColumnDefinitions>
+
+  <Content>
+    <GridElement Column="1" Row="1" VerticalAlignment="@Alignment.Center">
+      File Type:
+    </GridElement>
+    <GridElement Column="3" Row="1">
+      <InputSelect class="form-control" @bind-Value="SelectedFileType">
+        @foreach (FileType type in Enum.GetValues(typeof(FileType)))
+        {
+          <option value="@type">@type</option>
+        }
+      </InputSelect>
+    </GridElement>
+
+    <GridElement Column="1" Row="3" ColumnSpan="3">
+      @if (SelectedFileType == FileType.CSV)
+      {
+        <CSVParserComponent />
+      }
+      else if (SelectedFileType == FileType.JSON)
+      {
+        <JSONParserComponent />
+      }
+    </GridElement>
+  </Content>
+</Grid>
+
+
+
+@code {
+  public enum FileType
+  {
+    CSV,
+    JSON
+  }
+
+  public FileType SelectedFileType = FileType.CSV;
+
+  protected override async Task OnInitializedAsync()
+  {
+    var config = await LocalStorageHelper.GetCSVParserConfiguration();
+    config.ArtistFieldIndex = 42;
+    await config.SaveToLocalStorage();
+  }
+}

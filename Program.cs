@@ -8,7 +8,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-LastAuthHelper.Initialize(builder.Services.Where(i => i.ServiceType == typeof(IJSRuntime)).FirstOrDefault()?.ImplementationInstance as IJSRuntime);
+LocalStorageHelper.Initialize(builder.Services.Where(i => i.ServiceType == typeof(IJSRuntime)).FirstOrDefault()?.ImplementationInstance as IJSRuntime);
 builder.Services.AddScoped(s => new LastfmClientService());
 
 await builder.Build().RunAsync();
