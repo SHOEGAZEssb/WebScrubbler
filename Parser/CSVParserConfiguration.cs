@@ -4,7 +4,7 @@ using System.Text;
 namespace WebScrubbler.Parser
 {
   [DataContract]
-  public struct CSVParserConfiguration
+  public class CSVParserConfiguration
   {
     #region Properties
 
@@ -27,7 +27,7 @@ namespace WebScrubbler.Parser
     public int MillisecondsPlayedFieldIndex;
 
     [DataMember]
-    public TimeSpan MillisecondsPlayedThreshold;
+    public int MillisecondsPlayedThreshold;
 
     [DataMember]
     public bool FilterShortPlayedSongs;
@@ -56,7 +56,7 @@ namespace WebScrubbler.Parser
       AlbumArtistFieldIndex = 3;
       TimestampFieldIndex = 4;
       MillisecondsPlayedFieldIndex = 5;
-      MillisecondsPlayedThreshold = TimeSpan.FromMilliseconds(1000);
+      MillisecondsPlayedThreshold = 1000;
       FilterShortPlayedSongs = true;
       Delimiters = ",";
       HasFieldsEnclosedInQuotes = true;
