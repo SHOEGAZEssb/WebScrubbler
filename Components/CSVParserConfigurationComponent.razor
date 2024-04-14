@@ -116,5 +116,10 @@
   protected override async Task OnInitializedAsync()
   {
     Config = await LocalStorageHelper.GetCSVParserConfiguration();
+    Config.ArtistFieldIndex = 0;
+    Config.TrackFieldIndex = 2;
+    Config.AlbumFieldIndex = 1;
+    Config.AlbumArtistFieldIndex = 10;
+    Config.TimestampFieldIndex = 3;
   }
 }

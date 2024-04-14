@@ -1,0 +1,20 @@
+﻿@using WebScrubbler.Data
+@inherits ComponentBase
+
+@code {
+  protected IBrowserFile? CSVFile;
+
+  public List<ScrobbleViewModel>? Scrobbles
+  {
+    get => _scrobbles;
+    set
+    {
+      _scrobbles = value;
+      ScrobblesChanged.InvokeAsync();
+    }
+  }
+  private List<ScrobbleViewModel>? _scrobbles;
+
+  [Parameter]
+  public EventCallback ScrobblesChanged { get; set; }
+}
