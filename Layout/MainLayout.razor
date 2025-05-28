@@ -21,14 +21,14 @@
 @code {
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    var auth = await LastAuthHelper.FromLocalStorage();
+    var auth = await LocalStorageHelper.GetILastAuth();
     if (!auth?.Authenticated ?? true)
       NavManager.NavigateTo("/landing");
   }
 
   private async Task Logout()
   {
-    await LastAuthHelper.DeleteAuthFromLocalStorage();
+    await LocalStorageHelper.DeleteILastAuth();
     StateHasChanged();
   }
 }

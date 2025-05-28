@@ -1,0 +1,39 @@
+﻿@using WebScrubbler.Data
+@using WebScrubbler.Parser
+
+@inherits ParserBaseComponent
+
+<BSAccordion>
+  <BSAccordionItem DefaultShown="false">
+    <Header>CSV Parser Configuration</Header>
+    <Content>
+      <CSVParserConfigurationComponent @ref="_configRef" />
+    </Content>
+  </BSAccordionItem>
+</BSAccordion>
+
+<div>
+  Select file to process:
+</div>
+
+<InputFile class="form-control" accept=".csv" OnChange="@HandleFileSelected" />
+
+@code {
+  private CSVParserConfigurationComponent? _configRef;
+
+  private async Task HandleFileSelected(InputFileChangeEventArgs e)
+  {
+    if (_configRef != null)
+    {
+      CSVFile = e.File;
+      var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+      await using FileStream fs = new(path, FileMode.Create);
+      await CSVFile.OpenReadStream(CSVFile.Size).CopyToAsync(fs);
+      fs.Position = 0;
+
+      var s = CSVParser.Parse(fs, _configRef.Config);
+      Scrobbles = s.scrobbles.Select(s => new ScrobbleViewModel(s)).ToList();
+      File.Delete(path);
+    }
+  }
+}

@@ -16,14 +16,14 @@ namespace WebScrubbler
 
     public LastfmClientService()
     {
-      LastAuthHelper.AuthDeleted += LastAuthHelper_AuthDeleted;
+      LocalStorageHelper.AuthDeleted += LastAuthHelper_AuthDeleted;
     }
 
     public async Task<LastfmClient?> GetClient() 
     {
       if (_client == null)
       {
-        var auth = await LastAuthHelper.FromLocalStorage();
+        var auth = await LocalStorageHelper.GetILastAuth();
         if (auth != null)
           _client = new LastfmClient((LastAuth)auth, HttpClient);
       }
@@ -39,7 +39,7 @@ namespace WebScrubbler
 
     public void Dispose()
     {
-      LastAuthHelper.AuthDeleted -= LastAuthHelper_AuthDeleted;
+      LocalStorageHelper.AuthDeleted -= LastAuthHelper_AuthDeleted;
     }
   }
 }

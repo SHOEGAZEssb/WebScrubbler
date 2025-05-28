@@ -1,0 +1,135 @@
+﻿@page "/fileparsescrobble"
+@using IF.Lastfm.Core.Objects
+@using WebScrubbler.Components
+@using WebScrubbler.Data
+@layout MainLayout
+
+@inject LastfmClientService FMClient
+
+<PageTitle>File Parse Scrobble</PageTitle>
+
+<h3>File Parse Scrobble</h3>
+
+<Grid>
+  <RowDefinitions>
+    <RowDefinition Height="Auto" />
+    <RowDefinition Height="30" />
+    <RowDefinition Height="*" />
+  </RowDefinitions>
+  <ColumnDefinitions>
+    <ColumnDefinition Width="Auto" />
+    <ColumnDefinition Width="5" />
+    <ColumnDefinition Width="*" />
+  </ColumnDefinitions>
+
+  <Content>
+    <GridElement Column="1" Row="1" VerticalAlignment="@Alignment.Center">
+      File Type:
+    </GridElement>
+    <GridElement Column="3" Row="1">
+      <InputSelect class="form-control" @bind-Value="SelectedFileType">
+        @foreach (FileType type in Enum.GetValues(typeof(FileType)))
+        {
+          <option value="@type">@type</option>
+        }
+      </InputSelect>
+    </GridElement>
+
+    <GridElement Column="1" Row="3" ColumnSpan="3">
+      @if (SelectedFileType == FileType.CSV)
+      {
+        <CSVParserComponent @ref="_selectedParserComponent" ScrobblesChanged="HandleScrobblesChange"/>
+      }
+      else if (SelectedFileType == FileType.JSON)
+      {
+        <JSONParserComponent @ref="_selectedParserComponent" ScrobblesChanged="HandleScrobblesChange" />
+      }
+    </GridElement>
+  </Content>
+</Grid>
+
+@if (_selectedParserComponent != null && _selectedParserComponent.Scrobbles != null)
+{
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Scrobble?</th>
+        <th>Track</th>
+        <th>Artist</th>
+        <th>Album</th>
+        <th>Album Artist</th>
+        <th>Timestamp</th>
+      </tr>
+    </thead>
+    <tbody style="max-height: 1000px; overflow-y: auto;">
+      @foreach (var scrobble in _selectedParserComponent.Scrobbles)
+      {
+        <tr>
+          <td><input type="checkbox" @bind="@scrobble.ToScrobble" /></td>
+          <td>@scrobble.Track</td>
+          <td>@scrobble.Artist</td>
+          <td>@scrobble.Album</td>
+          <td>@scrobble.AlbumArtist</td>
+          <td>@scrobble.Timestamp</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <button class="btn btn-primary" @onclick="Scrobble" disabled="@(Scrobbling || !_selectedParserComponent.Scrobbles.Any(s => s.ToScrobble))">
+    @if (Scrobbling)
+    {
+      <div class="spinner-border" role="status" />
+    }
+    else
+    {
+      <span>Scrobble</span>
+    }
+  </button>
+}
+
+
+@code {
+  public enum FileType
+  {
+    CSV,
+    JSON
+  }
+
+  private FileType SelectedFileType;
+  private ParserBaseComponent? _selectedParserComponent;
+  private bool Scrobbling;
+
+  protected override void OnInitialized()
+  {
+    SelectedFileType = FileType.CSV;
+  }
+
+  private async Task Scrobble()
+  {
+    try
+    {
+      var client = await FMClient.GetClient();
+      if (client != null)
+      {
+
+        Scrobbling = true;
+        var scrobbles = _selectedParserComponent.Scrobbles.Where(s => s.ToScrobble)
+                                                          .Select(s => new Scrobble(s.Artist, s.Album, s.Track, s.Timestamp) { AlbumArtist = s.AlbumArtist });
+
+        var respone = await client.Scrobbler.ScrobbleAsync(scrobbles);
+      }
+    }
+    finally
+    {
+      Scrobbling = false;
+    }
+  }
+
+  private async Task HandleScrobblesChange()
+  {
+    // need to update state manually for the nested scrobbles property
+    StateHasChanged();
+    await Task.FromResult(true);
+  }
+}

@@ -119,7 +119,6 @@
             AlbumArtist = AlbumArtist
           };
 
-        await Task.Delay(3000);
         LastResponse = await scrobbler.ScrobbleAsync(scrobble);
         if (LastResponse.Success)
         {

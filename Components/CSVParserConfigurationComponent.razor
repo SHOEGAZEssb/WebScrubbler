@@ -1,0 +1,125 @@
+﻿@using WebScrubbler.Parser
+@using System.Text
+
+@if (Config != null)
+{
+  <Grid>
+    <ColumnDefinitions>
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="10" />
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="10" />
+      <ColumnDefinition Width="*" />
+    </ColumnDefinitions>
+    <RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="20" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="20" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="20" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="20" />
+    </RowDefinitions>
+
+    <Content>
+      <GridElement Column="1" Row="1">
+        Track Field Index
+        <InputNumber class="form-control" @bind-Value="@Config.TrackFieldIndex" />
+      </GridElement>
+      <GridElement Column="3" Row="1">
+        Artist Field Index
+        <InputNumber class="form-control" @bind-Value="@Config.ArtistFieldIndex" />
+      </GridElement>
+      <GridElement Column="5" Row="1">
+        Album Field Index
+        <InputNumber class="form-control" @bind-Value="@Config.AlbumFieldIndex" />
+      </GridElement>
+      <GridElement Column="1" Row="3">
+        Album Artist Field Index
+        <InputNumber class="form-control" @bind-Value="@Config.AlbumArtistFieldIndex" />
+      </GridElement>
+      <GridElement Column="3" Row="3">
+        Timestamp Field Index
+        <InputNumber class="form-control" @bind-Value="@Config.TimestampFieldIndex" />
+      </GridElement>
+
+      <GridElement Column="1" Row="5">
+        MS Played Field Index
+        <InputNumber class="form-control" @bind-Value="@Config.MillisecondsPlayedFieldIndex" />
+      </GridElement>
+      <GridElement Column="3" Row="5">
+        MS Played Threshold
+        <InputNumber class="form-control" @bind-Value="@Config.MillisecondsPlayedThreshold" />
+      </GridElement>
+
+      <GridElement Column="5" Row="5" >
+        <Grid>
+          <ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="*" />
+          </ColumnDefinitions>
+          <Content>
+            <GridElement Column="1" VerticalAlignment="@Alignment.Center">
+              Filter Short Played Songs:
+            </GridElement>
+            <GridElement Column="3" VerticalAlignment="@Alignment.Center">
+              <InputCheckbox class="form-check-input" @bind-Value="@Config.FilterShortPlayedSongs" />
+            </GridElement>
+          </Content>
+        </Grid>
+      </GridElement>
+
+      <GridElement Column="1" Row="7">
+        Delimiters
+        <InputText class="form-control" @bind-Value="@Config.Delimiters"/>
+      </GridElement>
+      <GridElement Column="3" Row="7">
+        Encoding
+        <InputSelect class="form-control" @bind-Value="@SelectedEncoding">
+          @foreach (Encoding encoding in typeof(Encoding).GetProperties().Where(i => i.PropertyType == typeof(Encoding)).Select(i => (Encoding)i.GetValue(null)))
+          {
+            <option value="@encoding">@encoding.EncodingName</option>
+          }
+        </InputSelect>
+      </GridElement>
+      <GridElement Column="5" Row="7">
+        <Grid>
+          <ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="*" />
+          </ColumnDefinitions>
+          <Content>
+            <GridElement Column="1" VerticalAlignment="@Alignment.Center">
+              Has Fields Enclosed In Quotes:
+            </GridElement>
+            <GridElement Column="3" VerticalAlignment="@Alignment.Center">
+              <InputCheckbox class="form-check-input" @bind-Value="@Config.HasFieldsEnclosedInQuotes" />
+            </GridElement>
+          </Content>
+        </Grid>
+      </GridElement>
+    </Content>
+  </Grid>
+}
+
+@code {
+  public CSVParserConfiguration Config;
+  public Encoding SelectedEncoding
+  {
+    get => Encoding.GetEncoding(Config.EncodingID);
+    set => Config.EncodingID = value.CodePage;
+  }
+
+  protected override async Task OnInitializedAsync()
+  {
+    Config = await LocalStorageHelper.GetCSVParserConfiguration();
+    Config.ArtistFieldIndex = 0;
+    Config.TrackFieldIndex = 2;
+    Config.AlbumFieldIndex = 1;
+    Config.AlbumArtistFieldIndex = 10;
+    Config.TimestampFieldIndex = 3;
+  }
+}
