@@ -35,7 +35,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          personal_token: ${{ secrets.GH_PAGES_TOKEN }}
           # The directory to publish.  For Blazor WebAssembly apps, ``wwwroot`` contains the static site.
           publish_dir: publish/wwwroot
           # Deploy to the public repository that serves the site
