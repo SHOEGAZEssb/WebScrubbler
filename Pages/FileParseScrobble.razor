@@ -10,71 +10,49 @@
 
 <h3>File Parse Scrobble</h3>
 
-<Grid>
-  <RowDefinitions>
-    <RowDefinition Height="Auto" />
-    <RowDefinition Height="30" />
-    <RowDefinition Height="*" />
-  </RowDefinitions>
-  <ColumnDefinitions>
-    <ColumnDefinition Width="Auto" />
-    <ColumnDefinition Width="5" />
-    <ColumnDefinition Width="*" />
-  </ColumnDefinitions>
+<div style="position: relative; z-index: 1">
+  <Grid>
+    <RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="30" />
+      <RowDefinition Height="*" />
+    </RowDefinitions>
+    <ColumnDefinitions>
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="5" />
+      <ColumnDefinition Width="*" />
+    </ColumnDefinitions>
 
-  <Content>
-    <GridElement Column="1" Row="1" VerticalAlignment="@Alignment.Center">
-      File Type:
-    </GridElement>
-    <GridElement Column="3" Row="1">
-      <InputSelect class="form-control" @bind-Value="SelectedFileType">
-        @foreach (FileType type in Enum.GetValues(typeof(FileType)))
+    <Content>
+      <GridElement Column="1" Row="1" VerticalAlignment="@Alignment.Center">
+        File Type:
+      </GridElement>
+      <GridElement Column="3" Row="1">
+        <InputSelect class="form-control" @bind-Value="SelectedFileType">
+          @foreach (FileType type in Enum.GetValues(typeof(FileType)))
+          {
+            <option value="@type">@type</option>
+          }
+        </InputSelect>
+      </GridElement>
+
+      <GridElement Column="1" Row="3" ColumnSpan="3">
+        @if (SelectedFileType == FileType.CSV)
         {
-          <option value="@type">@type</option>
+          <CSVParserComponent @ref="_selectedParserComponent" ScrobblesChanged="HandleScrobblesChange" />
         }
-      </InputSelect>
-    </GridElement>
-
-    <GridElement Column="1" Row="3" ColumnSpan="3">
-      @if (SelectedFileType == FileType.CSV)
-      {
-        <CSVParserComponent @ref="_selectedParserComponent" ScrobblesChanged="HandleScrobblesChange"/>
-      }
-      else if (SelectedFileType == FileType.JSON)
-      {
-        <JSONParserComponent @ref="_selectedParserComponent" ScrobblesChanged="HandleScrobblesChange" />
-      }
-    </GridElement>
-  </Content>
-</Grid>
+        else if (SelectedFileType == FileType.JSON)
+        {
+          <JSONParserComponent @ref="_selectedParserComponent" ScrobblesChanged="HandleScrobblesChange" />
+        }
+      </GridElement>
+    </Content>
+  </Grid>
+</div>
 
 @if (_selectedParserComponent != null && _selectedParserComponent.Scrobbles != null)
 {
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Scrobble?</th>
-        <th>Track</th>
-        <th>Artist</th>
-        <th>Album</th>
-        <th>Album Artist</th>
-        <th>Timestamp</th>
-      </tr>
-    </thead>
-    <tbody style="max-height: 1000px; overflow-y: auto;">
-      @foreach (var scrobble in _selectedParserComponent.Scrobbles)
-      {
-        <tr>
-          <td><input type="checkbox" @bind="@scrobble.ToScrobble" /></td>
-          <td>@scrobble.Track</td>
-          <td>@scrobble.Artist</td>
-          <td>@scrobble.Album</td>
-          <td>@scrobble.AlbumArtist</td>
-          <td>@scrobble.Timestamp</td>
-        </tr>
-      }
-    </tbody>
-  </table>
+  <ScrobbleListComponent @ref="_scrobbleListComponent" Scrobbles="@_selectedParserComponent.Scrobbles"/>
 
   <button class="btn btn-primary" @onclick="Scrobble" disabled="@(Scrobbling || !_selectedParserComponent.Scrobbles.Any(s => s.ToScrobble))">
     @if (Scrobbling)
@@ -98,6 +76,7 @@
 
   private FileType SelectedFileType;
   private ParserBaseComponent? _selectedParserComponent;
+  private ScrobbleListComponent _scrobbleListComponent = new ScrobbleListComponent();
   private bool Scrobbling;
 
   protected override void OnInitialized()
@@ -110,12 +89,11 @@
     try
     {
       var client = await FMClient.GetClient();
-      if (client != null)
+      if (client != null && _scrobbleListComponent != null && _scrobbleListComponent.Scrobbles != null)
       {
 
         Scrobbling = true;
-        var scrobbles = _selectedParserComponent.Scrobbles.Where(s => s.ToScrobble)
-                                                          .Select(s => new Scrobble(s.Artist, s.Album, s.Track, s.Timestamp) { AlbumArtist = s.AlbumArtist });
+        var scrobbles = _scrobbleListComponent.Scrobbles.Where(s => s.ToScrobble).Select(s => s.Scrobble);
 
         var respone = await client.Scrobbler.ScrobbleAsync(scrobbles);
       }
@@ -129,6 +107,7 @@
   private async Task HandleScrobblesChange()
   {
     // need to update state manually for the nested scrobbles property
+    // _scrobbleListComponent.Scrobbles = _selectedParserComponent.Scrobbles;
     StateHasChanged();
     await Task.FromResult(true);
   }

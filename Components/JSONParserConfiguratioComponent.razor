@@ -1,0 +1,81 @@
+﻿@using WebScrubbler.Parser
+
+@if (Config != null)
+{
+  <Grid>
+    <ColumnDefinitions>
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="10" />
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="10" />
+      <ColumnDefinition Width="*" />
+    </ColumnDefinitions>
+    <RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="20" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="20" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="20" />
+    </RowDefinitions>
+
+    <Content>
+      <GridElement Column="1" Row="1">
+        Track Field Index
+        <InputText class="form-control" @bind-Value="@Config.TrackNameProperty" />
+      </GridElement>
+      <GridElement Column="3" Row="1">
+        Artist Field Index
+        <InputText class="form-control" @bind-Value="@Config.ArtistNameProperty" />
+      </GridElement>
+      <GridElement Column="5" Row="1">
+        Album Field Index
+        <InputText class="form-control" @bind-Value="@Config.AlbumNameProperty" />
+      </GridElement>
+      <GridElement Column="1" Row="3">
+        Album Artist Field Index
+        <InputText class="form-control" @bind-Value="@Config.AlbumArtistNameProperty" />
+      </GridElement>
+      <GridElement Column="3" Row="3">
+        Timestamp Field Index
+        <InputText class="form-control" @bind-Value="@Config.TimestampProperty" />
+      </GridElement>
+
+      <GridElement Column="1" Row="5">
+        MS Played Field Index
+        <InputText class="form-control" @bind-Value="@Config.MillisecondsPlayedProperty" />
+      </GridElement>
+      <GridElement Column="3" Row="5">
+        MS Played Threshold
+        <InputNumber class="form-control" @bind-Value="@Config.MillisecondsPlayedThreshold" />
+      </GridElement>
+
+      <GridElement Column="5" Row="5">
+        <Grid>
+          <ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="*" />
+          </ColumnDefinitions>
+          <Content>
+            <GridElement Column="1" VerticalAlignment="@Alignment.Center">
+              Filter Short Played Songs:
+            </GridElement>
+            <GridElement Column="3" VerticalAlignment="@Alignment.Center">
+              <InputCheckbox class="form-check-input" @bind-Value="@Config.FilterShortPlayedSongs" />
+            </GridElement>
+          </Content>
+        </Grid>
+      </GridElement>
+    </Content>
+  </Grid>
+}
+
+@code {
+  public JSONParserConfiguration Config;
+
+  protected override async Task OnInitializedAsync()
+  {
+    Config = await LocalStorageHelper.GetObject<JSONParserConfiguration>(LocalStorageHelper.JSONPARSERCONFIGURATIONIDENTIFIER);
+  }
+}

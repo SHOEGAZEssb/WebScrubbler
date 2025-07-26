@@ -1,0 +1,41 @@
+﻿@using WebScrubbler.Data
+
+@if (Scrobbles != null)
+{
+  <div style="max-height: 30em; overflow-y: auto; margin-top: 2em">
+    <table class="table" style="width: 100%; border-collapse: collapse;">
+      <thead style="position: sticky; top: 0; background-color: #fff; z-index: 1;">
+        <tr>
+          <th>Scrobble?</th>
+          <th>Track</th>
+          <th>Artist</th>
+          <th>Album</th>
+          <th>Album Artist</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody style="max-height: 1000px; overflow-y: auto;">
+        @foreach (var scrobble in Scrobbles)
+        {
+          <tr>
+            <td><input type="checkbox" @bind="@scrobble.ToScrobble" /></td>
+            <td>@scrobble.Track</td>
+            <td>@scrobble.Artist</td>
+            <td>@scrobble.Album</td>
+            <td>@scrobble.AlbumArtist</td>
+            <td>@scrobble.Timestamp</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+else
+{
+  <div>Bla</div>
+}
+
+@code {
+  [Parameter]
+  public List<ScrobbleViewModel>? Scrobbles { get; set; }
+}

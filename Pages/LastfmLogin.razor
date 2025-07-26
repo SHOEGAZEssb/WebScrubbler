@@ -35,9 +35,9 @@
 
         var content = await response.Content.ReadAsStringAsync();
         var sessionDict = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(await response.Content.ReadAsStringAsync());
-        if (sessionDict?.TryGetValue("session", out Dictionary<string, string> sessionInfoDict) ?? false)
+        if (sessionDict?.TryGetValue("session", out Dictionary<string, string>? sessionInfoDict) ?? false)
         {
-          if (sessionInfoDict.TryGetValue("name", out string username) && sessionInfoDict.TryGetValue("key", out string key))
+          if (sessionInfoDict.TryGetValue("name", out string? username) && sessionInfoDict.TryGetValue("key", out string? key))
           {
             var subscriber = sessionInfoDict.ContainsKey("subscriber") && sessionInfoDict["subscriber"] == "1";
             var la = new LastAuth("69fbfa5fdc2cc1a158ec3bffab4be7a7", "30a6ed8a75dad2aa6758fa607c53adb5");

@@ -1,9 +1,7 @@
 ﻿using IF.Lastfm.Core.Api;
 using IF.Lastfm.Core.Objects;
-using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Newtonsoft.Json;
-using WebScrubbler.Parser;
 
 namespace WebScrubbler
 {
@@ -11,8 +9,8 @@ namespace WebScrubbler
   {
     private static IJSRuntime? _jsRuntime;
 
-    public static void Initialize(IJSRuntime? runtime) 
-    { 
+    public static void Initialize(IJSRuntime? runtime)
+    {
       _jsRuntime = runtime ?? throw new ArgumentNullException(nameof(runtime));
     }
 
@@ -41,7 +39,7 @@ namespace WebScrubbler
     }
 
     public static async Task SaveToLocalStorage(this ILastAuth auth)
-    { 
+    {
       if (_jsRuntime != null)
         await _jsRuntime.InvokeVoidAsync("localStorage.setItem", LASTAUTHIDENTIFIER, JsonConvert.SerializeObject(auth.UserSession));
     }
@@ -57,48 +55,43 @@ namespace WebScrubbler
 
     #endregion ILastAuth
 
-    #region CSVParserConfiguration
+    public const string CSVPARSERCONFIGURATIONIDENTIFIER = "csvParserConfiguration";
+    public const string JSONPARSERCONFIGURATIONIDENTIFIER = "jsonParserConfiguration";
 
-    private const string CSVPARSERCONFIGURATIONIDENTIFIER = "csvParserConfiguration";
-
-    public static async Task<CSVParserConfiguration> GetCSVParserConfiguration()
+    public static async Task<T> GetObject<T>(string localStorageIdentifier) where T : new()
     {
       if (_jsRuntime == null)
         throw new InvalidOperationException("No JSRuntime available");
+
+      var serializedState = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", localStorageIdentifier);
+      if (string.IsNullOrEmpty(serializedState))
+        return new T();
       else
       {
-        var serializedState = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", CSVPARSERCONFIGURATIONIDENTIFIER);
-        if (string.IsNullOrEmpty(serializedState))
-          return new CSVParserConfiguration();
-        else
+        try
         {
-          try
-          {
-            return JsonConvert.DeserializeObject<CSVParserConfiguration>(serializedState);
-          }
-          catch 
-          {
-            await DeleteCSVParserConfiguration();
-            return new CSVParserConfiguration();
-          }
+          return JsonConvert.DeserializeObject<T>(serializedState) ?? throw new Exception($"Could not deserialize object of type {nameof(T)}");
+        }
+        catch
+        {
+          await DeleteObject(localStorageIdentifier);
+          return new T();
         }
       }
     }
 
-    public static async Task SaveToLocalStorage(this CSVParserConfiguration csvParserConfiguration)
+    public static async Task SaveToLocalStorage(object obj, string localStorageIdentifier)
     {
       if (_jsRuntime != null)
-        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", CSVPARSERCONFIGURATIONIDENTIFIER, JsonConvert.SerializeObject(csvParserConfiguration));
+        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", localStorageIdentifier, JsonConvert.SerializeObject(obj));
     }
 
-    public static async Task DeleteCSVParserConfiguration()
+    public static async Task DeleteObject(string localStorageIdetifier)
     {
       if (_jsRuntime == null)
         throw new InvalidOperationException("No JSRuntime available");
-      else
-        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", CSVPARSERCONFIGURATIONIDENTIFIER);
-    }
 
-    #endregion CSVParserConfiguration
+      await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", localStorageIdetifier);
+    }
   }
 }

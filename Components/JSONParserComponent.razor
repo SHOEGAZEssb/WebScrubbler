@@ -1,7 +1,50 @@
-﻿@inherits ParserBaseComponent
+﻿@using WebScrubbler.Data
+@using WebScrubbler.Parser
 
-<h3>JSONParserComponent</h3>
+@inherits ParserBaseComponent
+
+<BSAccordion>
+  <BSAccordionItem DefaultShown="false">
+    <Header>JSON Parser Configuration</Header>
+    <Content>
+      <JSONParserConfiguratioComponent @ref="_configRef" />
+    </Content>
+  </BSAccordionItem>
+</BSAccordion>
+
+<div>
+  Select file to process:
+</div>
+
+<InputFile class="form-control" accept=".json" OnChange="@HandleFileSelected" />
 
 @code {
+  private JSONParserConfiguratioComponent? _configRef;
 
+  private async Task HandleFileSelected(InputFileChangeEventArgs e)
+  {
+    if (_configRef != null)
+    {
+      var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+      try
+      {
+        File = e.File;
+        await using FileStream fs = new(path, FileMode.Create);
+        await File.OpenReadStream(File.Size).CopyToAsync(fs);
+        fs.Position = 0;
+
+        var s = JSONParser.Parse(fs, _configRef.Config);
+        Scrobbles = s.scrobbles.Select(s => new ScrobbleViewModel(s)).ToList();
+        await LocalStorageHelper.SaveToLocalStorage(_configRef.Config, LocalStorageHelper.JSONPARSERCONFIGURATIONIDENTIFIER);
+      }
+      catch (Exception ex)
+      {
+
+      }
+      finally
+      {
+        System.IO.File.Delete(path);
+      }
+    }
+  }
 }

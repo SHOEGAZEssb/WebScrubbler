@@ -25,15 +25,15 @@
   {
     if (_configRef != null)
     {
-      CSVFile = e.File;
+      File = e.File;
       var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
       await using FileStream fs = new(path, FileMode.Create);
-      await CSVFile.OpenReadStream(CSVFile.Size).CopyToAsync(fs);
+      await File.OpenReadStream(File.Size).CopyToAsync(fs);
       fs.Position = 0;
 
       var s = CSVParser.Parse(fs, _configRef.Config);
       Scrobbles = s.scrobbles.Select(s => new ScrobbleViewModel(s)).ToList();
-      File.Delete(path);
+        System.IO.File.Delete(path);
     }
   }
 }

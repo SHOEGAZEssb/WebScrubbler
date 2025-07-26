@@ -1,5 +1,4 @@
 ﻿using IF.Lastfm.Core.Objects;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
 using System.Text;
@@ -15,7 +14,7 @@ namespace WebScrubbler.Parser
   /// <summary>
   /// Parses a .csv file.
   /// </summary>
-  class CSVParser
+  public static class CSVParser
   {
     /// <summary>
     /// Different formats to try in case TryParse fails.
@@ -33,7 +32,7 @@ namespace WebScrubbler.Parser
     {
       var scrobbles = new List<Scrobble>();
       var errors = new List<string>();
-      string[] fields = null;
+      string[]? fields = null;
 
       using (var parser = new TextFieldParser(fileStream, Encoding.GetEncoding(config.EncodingID)))
       {
@@ -45,7 +44,10 @@ namespace WebScrubbler.Parser
           try
           {
             fields = parser.ReadFields();
-            string dateString = fields.ElementAtOrDefault(config.TimestampFieldIndex);
+            if (fields == null)
+              throw new Exception("Error parsing line");
+
+            string? dateString = fields.ElementAtOrDefault(config.TimestampFieldIndex);
 
             // check for 'now playing'
             if (string.IsNullOrEmpty(dateString) && scrobbleMode == ScrobbleMode.Normal)
@@ -56,9 +58,9 @@ namespace WebScrubbler.Parser
               throw new Exception("Timestamp could not be parsed!");
 
             // try to get optional parameters first
-            string album = fields.ElementAtOrDefault(config.AlbumFieldIndex);
-            string albumArtist = fields.ElementAtOrDefault(config.AlbumArtistFieldIndex);
-            string timePlayedMS = fields.ElementAtOrDefault(config.MillisecondsPlayedFieldIndex);
+            string? album = fields.ElementAtOrDefault(config.AlbumFieldIndex);
+            string? albumArtist = fields.ElementAtOrDefault(config.AlbumArtistFieldIndex);
+            string? timePlayedMS = fields.ElementAtOrDefault(config.MillisecondsPlayedFieldIndex);
 
             // filter short played songs
             if (config.FilterShortPlayedSongs &&
@@ -79,7 +81,7 @@ namespace WebScrubbler.Parser
             string errorString = $"CSV line number: {parser.LineNumber - 1},";
 
             // fields is old in this case
-            if (ex is not MalformedLineException)
+            if (ex is not MalformedLineException && fields != null)
             {
               foreach (string s in fields)
               {

@@ -1,6 +1,4 @@
 ﻿using IF.Lastfm.Core.Objects;
-using Microsoft.AspNetCore.Components;
-using System;
 
 namespace WebScrubbler.Data
 {
@@ -8,11 +6,13 @@ namespace WebScrubbler.Data
   {
     #region Properties
 
-    public string Track => _scrobble.Track;
-    public string Artist => _scrobble.Artist;
-    public string Album => _scrobble.Album;
-    public string AlbumArtist => _scrobble.AlbumArtist;
-    public DateTime Timestamp => _scrobble.TimePlayed.DateTime;
+    public Scrobble Scrobble { get; } = scrobble;
+
+    public string Track => Scrobble.Track;
+    public string Artist => Scrobble.Artist;
+    public string Album => Scrobble.Album;
+    public string AlbumArtist => Scrobble.AlbumArtist;
+    public DateTime Timestamp => Scrobble.TimePlayed.DateTime;
 
     public bool CanScrobble => Timestamp > DateTime.Now.Subtract(TimeSpan.FromDays(14));
 
@@ -24,11 +24,5 @@ namespace WebScrubbler.Data
     private bool _toScrobble;
 
     #endregion Properties
-
-    #region Member
-
-    private readonly Scrobble _scrobble = scrobble;
-
-    #endregion Member
   }
 }
