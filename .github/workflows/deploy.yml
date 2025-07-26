@@ -1,0 +1,46 @@
+name: Deploy to GitHub Pages
+
+# Trigger the workflow on any push to the main branch.  When new commits
+# are pushed to ``main``, this job will build the Blazor WebAssembly app
+# and publish the compiled files to the ``shoegazessb.github.io`` repository
+# so that GitHub Pages serves the latest version.
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Check out the code in this repository
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      # Install the required .NET SDK (adjust the version to match your project)
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Restore NuGet dependencies
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Build the WebAssembly project in Release configuration and publish to the ``publish`` folder
+      - name: Build and publish
+        run: dotnet publish -c Release -o publish
+
+      # Deploy the published ``wwwroot`` folder to the GitHub Pages repository
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # The directory to publish.  For Blazor WebAssembly apps, ``wwwroot`` contains the static site.
+          publish_dir: publish/wwwroot
+          # Deploy to the public repository that serves the site
+          external_repository: SHOEGAZEssb/shoegazessb.github.io
+          publish_branch: main
+          # Configure git user for the commit that writes to the ``shoegazessb.github.io`` repo
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
